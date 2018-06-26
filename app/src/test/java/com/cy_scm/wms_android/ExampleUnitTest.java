@@ -1,4 +1,4 @@
-package com.example.wenwangwang.wms_android;
+package com.cy_scm.wms_android;
 
 import org.junit.Test;
 
