@@ -8,10 +8,12 @@ import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.view.Window;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebView;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import java.io.BufferedInputStream;
@@ -48,36 +50,37 @@ public class MainActivity extends Activity {
         mWebView=(WebView)findViewById((R.id.webview));
         // 启用javascript
         mWebView.getSettings().setJavaScriptEnabled(true);
+        mWebView.setVerticalScrollbarOverlay(true);
         mWebView.loadUrl("file:///android_asset/www/index.html");
 
-//        mWebView.addJavascriptInterface(this, "callandroidorios");
+        //在js中调用本地java方法
+        mWebView.addJavascriptInterface(new JsInterface(this), "CallAndroidOrIOS");
+
         Log.d("LM", "程序启动");
 
-
-//// 因为该方法在 Android 4.4 版本才可使用，所以使用时需进行版本判断
-//        if (version < 18) {
-//            mWebView.loadUrl("javascript:scan()");
-//        } else {
-//            mWebView.evaluateJavascript("javascript:scan()", new ValueCallback<String>() {
-//                @Override
-//                public void onReceiveValue(String value) {
-//                    //此处为 js 返回的结果
-//                            Log.d("LM", "程序启动11122");
-//                }
-//            });
-//        }
     }
 
-//    // 添加接口
-//    public void addJavascriptInterface (Object object, String name){
-//
-//
-//        Log.d("LM", "程序启动222");
-//    }
-//
-////    @JavascriptInterface
-//    public void hello(String string) {
-//        System.out.println("js调用了这个方法:" + string);
-//        Log.d("LM", "程序启动11");
-//    }
+    // js调用java
+    private class JsInterface {
+        private Context mContext;
+
+        public JsInterface(Context context) {
+            this.mContext = context;
+        }
+
+        //在js中调用window.CallAndroidOrIOS.callAndroid(name)，便会触发此方法。
+        @JavascriptInterface
+        public void callAndroid(String name) {
+
+            Log.d("LM", "程序启动11122212" + name);
+        }
+    }
+
+    // java调用js
+    public void sendInfoToJs(View view) {
+
+        //调用js中的函数：showInfoFromJava(msg)
+                    Log.d("LM", "程序启动11777");
+        mWebView.loadUrl("javascript:showInfoFromJava()");
+    }
 }
