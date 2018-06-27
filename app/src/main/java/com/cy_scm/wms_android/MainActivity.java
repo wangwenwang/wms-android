@@ -1,11 +1,18 @@
 package com.cy_scm.wms_android;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
+import android.os.Build;
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Window;
+import android.webkit.JavascriptInterface;
+import android.webkit.ValueCallback;
 import android.webkit.WebView;
+import android.widget.Toast;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -23,106 +30,54 @@ import java.util.zip.ZipFile;
 import static android.content.ContentValues.TAG;
 
 public class MainActivity extends Activity {
-    WebView mWebview;
+    WebView mWebView;
+    // Android版本变量
+    final int version = Build.VERSION.SDK_INT;
 
+    @SuppressLint("JavascriptInterface")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         final Activity mActivity = this;
         super.onCreate(savedInstanceState);
-        Log.d(TAG, "onCreate: ");
-
-        Log.d("HelloWorldActivity","______________onCreate execute______________");
 
         this.getWindow().requestFeature(Window.FEATURE_PROGRESS);
         setContentView(R.layout.activity_main);
 
         getWindow().setFeatureInt(Window.FEATURE_PROGRESS, Window.PROGRESS_VISIBILITY_ON);
 
-        mWebview=(WebView)findViewById((R.id.webview));
-        mWebview.getSettings().setJavaScriptEnabled(true);
-        mWebview.loadUrl("https://www.baidu.com/");
+        mWebView=(WebView)findViewById((R.id.webview));
+        // 启用javascript
+        mWebView.getSettings().setJavaScriptEnabled(true);
+        mWebView.loadUrl("file:///android_asset/www/index.html");
+
+//        mWebView.addJavascriptInterface(this, "callandroidorios");
+        Log.d("LM", "程序启动");
+
+
+//// 因为该方法在 Android 4.4 版本才可使用，所以使用时需进行版本判断
+//        if (version < 18) {
+//            mWebView.loadUrl("javascript:scan()");
+//        } else {
+//            mWebView.evaluateJavascript("javascript:scan()", new ValueCallback<String>() {
+//                @Override
+//                public void onReceiveValue(String value) {
+//                    //此处为 js 返回的结果
+//                            Log.d("LM", "程序启动11122");
+//                }
+//            });
+//        }
     }
 
-    /**
-     * 解压缩功能.
-     * 将ZIP_FILENAME文件解压到ZIP_DIR目录下.
-     * @throws Exception
-     */
-    public int upZipFile(File zipFile, String folderPath)throws ZipException,IOException {
-        //public static void upZipFile() throws Exception{
-        ZipFile zfile=new ZipFile(zipFile);
-        Enumeration zList=zfile.entries();
-        ZipEntry ze=null;
-        byte[] buf=new byte[1024];
-        while(zList.hasMoreElements()){
-            ze=(ZipEntry)zList.nextElement();
-            if(ze.isDirectory()){
-                Log.d("upZipFile", "ze.getName() = "+ze.getName());
-                String dirstr = folderPath + ze.getName();
-                //dirstr.trim();
-                dirstr = new String(dirstr.getBytes("8859_1"), "GB2312");
-                Log.d("upZipFile", "str = "+dirstr);
-                File f=new File(dirstr);
-                f.mkdir();
-                continue;
-            }
-            Log.d("upZipFile", "ze.getName() = "+ze.getName());
-            OutputStream os=new BufferedOutputStream(new FileOutputStream(getRealFileName(folderPath, ze.getName())));
-            InputStream is=new BufferedInputStream(zfile.getInputStream(ze));
-            int readLen=0;
-            while ((readLen=is.read(buf, 0, 1024))!=-1) {
-                os.write(buf, 0, readLen);
-            }
-            is.close();
-            os.close();
-        }
-        zfile.close();
-        return 0;
-    }
-
-    /**
-     * 给定根目录，返回一个相对路径所对应的实际文件名.
-     * @param baseDir 指定根目录
-     * @param absFileName 相对路径名，来自于ZipEntry中的name
-     * @return java.io.File 实际的文件
-     */
-    public static File getRealFileName(String baseDir, String absFileName){
-        String[] dirs=absFileName.split("/");
-        File ret=new File(baseDir);
-        String substr = null;
-        if(dirs.length>1){
-            for (int i = 0; i < dirs.length-1;i++) {
-                substr = dirs[i];
-                try {
-                    //substr.trim();
-                    substr = new String(substr.getBytes("8859_1"), "GB2312");
-
-                } catch (UnsupportedEncodingException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-                ret=new File(ret, substr);
-
-            }
-            Log.d("upZipFile", "1ret = "+ret);
-            if(!ret.exists())
-                ret.mkdirs();
-            substr = dirs[dirs.length-1];
-            try {
-                //substr.trim();
-                substr = new String(substr.getBytes("8859_1"), "GB2312");
-                Log.d("upZipFile", "substr = "+substr);
-            } catch (UnsupportedEncodingException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-
-            ret=new File(ret, substr);
-            Log.d("upZipFile", "2ret = "+ret);
-            return ret;
-        }
-
-        return ret;
-    }
-
+//    // 添加接口
+//    public void addJavascriptInterface (Object object, String name){
+//
+//
+//        Log.d("LM", "程序启动222");
+//    }
+//
+////    @JavascriptInterface
+//    public void hello(String string) {
+//        System.out.println("js调用了这个方法:" + string);
+//        Log.d("LM", "程序启动11");
+//    }
 }
