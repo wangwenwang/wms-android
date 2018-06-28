@@ -40,6 +40,7 @@ public class MainActivity extends Activity {
     WebView mWebView;
     // Android版本变量
     final int version = Build.VERSION.SDK_INT;
+    String inputName;
 
     @SuppressLint("JavascriptInterface")
     @Override
@@ -57,6 +58,7 @@ public class MainActivity extends Activity {
         mWebView.getSettings().setJavaScriptEnabled(true);
         mWebView.setVerticalScrollbarOverlay(true);
         mWebView.loadUrl("file:///android_asset/www/index.html");
+//        mWebView.loadUrl("file:///android_asset/wms/dist/index.html");
 
         //在js中调用本地java方法
         mWebView.addJavascriptInterface(new JsInterface(this), "CallAndroidOrIOS");
@@ -75,11 +77,12 @@ public class MainActivity extends Activity {
 
         //在js中调用window.CallAndroidOrIOS.callAndroid(name)，便会触发此方法。
         @JavascriptInterface
-        public void callAndroid(String name) {
+        public void callAndroid(String exceName, String inputName) {
 
-            Log.d("LM", name);
+            Log.d("LM", "执行:" + exceName + "    " + "输入框:" + inputName);
+            MainActivity.this.inputName = inputName;
 
-            if(name.equals("我想调用app原生扫描二维码/条码")) {
+            if(exceName.equals("我想调用app原生扫描二维码/条码")) {
 
                 Log.d("LM", "执行扫码");
 
@@ -97,24 +100,14 @@ public class MainActivity extends Activity {
                     };
                 }.start();
 
-            }else if(name.equals("我想播放警告音")) {
+            }else if(exceName.equals("我想播放警告音")) {
 
                 Log.d("LM", "执行声音");
 
-                //直接创建，不需要设置setDataSource
-                MediaPlayer mMediaPlayer = MediaPlayer.create(mContext,  R.raw.warning);
-                mMediaPlayer= MediaPlayer.create(this, R.raw.warning);
+                MediaPlayer mMediaPlayer= MediaPlayer.create(mContext, R.raw.wrong01);
                 mMediaPlayer.start();
             }
         }
-    }
-
-    // java调用js
-    public void sendInfoToJs(View view) {
-
-        // 调用js中的函数：QRScanAjax(msg)
-        // 记得有mounted里 window.QRScanAjax = this.QRScanAjax;
-        mWebView.loadUrl("javascript:QRScanAjax('扫描结果')");
     }
 
     @Override
@@ -135,6 +128,7 @@ public class MainActivity extends Activity {
                 mWebView.loadUrl(url);
 
                 Log.d("LM", url);
+                Log.d("LM", MainActivity.this.inputName);
             }
 
         }

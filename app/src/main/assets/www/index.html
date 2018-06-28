@@ -6,7 +6,7 @@
                         var clientWidth = docEl.clientWidth;
                         if (!clientWidth) return;
                         if(clientWidth>=750){
-                            docEl.style.fontSize = '100px';
+                            docEl.style.fontSize = 50 * (clientWidth / 750) + 'px';
                         }else{
                             docEl.style.fontSize = 50 * (clientWidth / 750) + 'px';
                         }
@@ -14,4 +14,4 @@
             if (!doc.addEventListener) return;
             win.addEventListener(resizeEvt, recalc, false);
             doc.addEventListener('DOMContentLoaded', recalc, false);
-        })(document, window);</script><link href=css/app.50f9167c88b116335c49909b1c076a44.css rel=stylesheet></head><body><div id=app></div><script type=text/javascript src=js/manifest.5abe310ef2fafcf81b83.js></script><script type=text/javascript src=js/vendor.d69ff1b099b3c2e72b5c.js></script><script type=text/javascript src=js/app.cb31eff07979e0097cae.js></script></body></html>
+        })(document, window);</script><link href=css/app.ae70cd75aa5061d864a6edfb8d3f16af.css rel=stylesheet></head><body><div id=app></div><script type=text/javascript src=js/manifest.5abe310ef2fafcf81b83.js></script><script type=text/javascript src=js/vendor.d69ff1b099b3c2e72b5c.js></script><script type=text/javascript src=js/app.a122bb7614441e93b47f.js></script></body></html>
