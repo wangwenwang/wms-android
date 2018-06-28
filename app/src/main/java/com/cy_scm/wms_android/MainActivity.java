@@ -3,6 +3,8 @@ package com.cy_scm.wms_android;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
@@ -15,6 +17,9 @@ import android.webkit.ValueCallback;
 import android.webkit.WebView;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -61,7 +66,7 @@ public class MainActivity extends Activity {
     }
 
     // js调用java
-    private class JsInterface {
+    private class JsInterface extends Activity {
         private Context mContext;
 
         public JsInterface(Context context) {
@@ -72,15 +77,69 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void callAndroid(String name) {
 
-            Log.d("LM", "程序启动11122212" + name);
+            Log.d("LM", name);
+
+            if(name.equals("我想调用app原生扫描二维码/条码")) {
+
+                Log.d("LM", "执行扫码");
+
+                new Thread(){
+                    public void run() {
+
+                        IntentIntegrator integator = new IntentIntegrator(MainActivity.this);
+                        integator.setDesiredBarcodeFormats(IntentIntegrator.ONE_D_CODE_TYPES);
+                        integator.setPrompt("请扫描");
+                        integator.setCameraId(0);
+                        integator.setBeepEnabled(true); //扫描成功的「哔哔」声，默认开启
+                        integator.setBarcodeImageEnabled(false);
+                        integator.setCaptureActivity(ScanActivity.class);
+                        integator.initiateScan();
+                    };
+                }.start();
+
+            }else if(name.equals("我想播放警告音")) {
+
+                Log.d("LM", "执行声音");
+
+                //直接创建，不需要设置setDataSource
+                MediaPlayer mMediaPlayer = MediaPlayer.create(mContext,  R.raw.warning);
+                mMediaPlayer= MediaPlayer.create(this, R.raw.warning);
+                mMediaPlayer.start();
+            }
         }
     }
 
     // java调用js
     public void sendInfoToJs(View view) {
 
-        //调用js中的函数：showInfoFromJava(msg)
-                    Log.d("LM", "程序启动11777");
-        mWebView.loadUrl("javascript:showInfoFromJava()");
+        // 调用js中的函数：QRScanAjax(msg)
+        // 记得有mounted里 window.QRScanAjax = this.QRScanAjax;
+        mWebView.loadUrl("javascript:QRScanAjax('扫描结果')");
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+
+        if(result != null) {
+
+            if(result.getContents() == null) {
+
+                Toast.makeText(this, "ffff", Toast.LENGTH_LONG).show();
+            }else {
+
+                Toast.makeText(this, result.getContents(), Toast.LENGTH_LONG).show();
+
+                String url = "javascript:QRScanAjax('" + result.getContents() + "')";
+                mWebView.loadUrl(url);
+
+                Log.d("LM", url);
+            }
+
+        }
+        else {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
     }
 }
