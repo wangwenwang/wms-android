@@ -86,6 +86,7 @@ public class MainActivity extends Activity {
 
                 Log.d("LM", "执行扫码");
 
+
                 new Thread(){
                     public void run() {
 
