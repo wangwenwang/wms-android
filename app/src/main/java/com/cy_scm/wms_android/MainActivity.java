@@ -6,38 +6,26 @@ import android.content.Context;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Build;
-import android.os.Environment;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 import android.view.Window;
 import android.webkit.JavascriptInterface;
-import android.webkit.ValueCallback;
 import android.webkit.WebView;
-import android.widget.EditText;
 import android.widget.Toast;
 
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
+import com.tencent.mm.opensdk.modelmsg.SendAuth;
+import com.tencent.mm.opensdk.openapi.IWXAPI;
+import com.tencent.mm.opensdk.openapi.WXAPIFactory;;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.util.Enumeration;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipException;
-import java.util.zip.ZipFile;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
-import static android.content.ContentValues.TAG;
 
 public class MainActivity extends Activity {
-    WebView mWebView;
+    public static WebView mWebView;
     // Android版本变量
     final int version = Build.VERSION.SDK_INT;
     String inputName;
@@ -45,7 +33,7 @@ public class MainActivity extends Activity {
     @SuppressLint("JavascriptInterface")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        final Activity mActivity = this;
+
         super.onCreate(savedInstanceState);
 
         this.getWindow().requestFeature(Window.FEATURE_PROGRESS);
@@ -53,19 +41,45 @@ public class MainActivity extends Activity {
 
         getWindow().setFeatureInt(Window.FEATURE_PROGRESS, Window.PROGRESS_VISIBILITY_ON);
 
-        mWebView=(WebView)findViewById((R.id.webview));
+
+        mWebView = (WebView) findViewById((R.id.webview));
         // 启用javascript
         mWebView.getSettings().setJavaScriptEnabled(true);
         mWebView.setVerticalScrollbarOverlay(true);
         mWebView.loadUrl("file:///android_asset/www/index.html");
-//        mWebView.loadUrl("file:///android_asset/wms/dist/index.html");
 
         //在js中调用本地java方法
         mWebView.addJavascriptInterface(new JsInterface(this), "CallAndroidOrIOS");
 
+        String str = "{" + "\"" + "latitude" + "\"" + ":" + 30.23 + "," + "\"" + "longitude"
+                + "\"" + ":" + 114.57 + "}";
+        System.out.println(str + "\n" + str.getClass());
+        try {
+            JSONObject jsonObj = (JSONObject) (new JSONParser().parse(str));
+            System.out.println(jsonObj.toJSONString() + "\n" + jsonObj.getClass());
+            double latitude = (double) jsonObj.get("latitude");
+            System.out.println(latitude);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
         Log.d("LM", "程序启动");
 
+        registToWX();
     }
+
+    // 微信开放平台APP_ID
+    private static final String APP_ID = "wxf1af3db4c541e417";
+
+    static public IWXAPI mWxApi;
+
+    private void registToWX() {
+        //AppConst.WEIXIN.APP_ID是指你应用在微信开放平台上的AppID，记得替换。
+        mWxApi = WXAPIFactory.createWXAPI(this, APP_ID, false);
+        // 将该app注册到微信
+        mWxApi.registerApp(APP_ID);
+    }
+
 
     // js调用java
     private class JsInterface extends Activity {
@@ -82,12 +96,11 @@ public class MainActivity extends Activity {
             Log.d("LM", "执行:" + exceName + "    " + "输入框:" + inputName);
             MainActivity.this.inputName = inputName;
 
-            if(exceName.equals("我想调用app原生扫描二维码/条码")) {
+            if (exceName.equals("调用app原生扫描二维码/条码")) {
 
                 Log.d("LM", "执行扫码");
 
-
-                new Thread(){
+                new Thread() {
                     public void run() {
 
                         IntentIntegrator integator = new IntentIntegrator(MainActivity.this);
@@ -98,15 +111,33 @@ public class MainActivity extends Activity {
                         integator.setBarcodeImageEnabled(false);
                         integator.setCaptureActivity(ScanActivity.class);
                         integator.initiateScan();
-                    };
+                    }
                 }.start();
 
-            }else if(exceName.equals("我想播放警告音")) {
+            } else if (exceName.equals("播放警告音")) {
 
                 Log.d("LM", "执行声音");
 
-                MediaPlayer mMediaPlayer= MediaPlayer.create(mContext, R.raw.wrong01);
+                MediaPlayer mMediaPlayer = MediaPlayer.create(mContext, R.raw.wrong01);
                 mMediaPlayer.start();
+            } else if (exceName.equals("微信登录")) {
+
+                Log.d("LM", "微信登录");
+
+                new Thread() {
+                    public void run() {
+                        if (!mWxApi.isWXAppInstalled()) {
+                            Log.d("LM", "您还未安装微信客户端");
+                            return;
+                        } else {
+                            Log.d("LM", "微信客户端已安装");
+                        }
+                        SendAuth.Req req = new SendAuth.Req();
+                        req.scope = "snsapi_userinfo";//官方固定写法
+                        req.state = "wechat_sdk_wms";//自定义一个字串
+                        mWxApi.sendReq(req);
+                    }
+                }.start();
             }
         }
     }
@@ -116,24 +147,23 @@ public class MainActivity extends Activity {
 
         IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
 
-        if(result != null) {
+        if (result != null) {
 
-            if(result.getContents() == null) {
+            if (result.getContents() == null) {
 
-                Toast.makeText(this, "ffff", Toast.LENGTH_LONG).show();
-            }else {
+                Toast.makeText(this, "已返回", Toast.LENGTH_LONG).show();
+            } else {
 
                 Toast.makeText(this, result.getContents(), Toast.LENGTH_LONG).show();
 
                 String url = "javascript:QRScanAjax('" + result.getContents() + "')";
-                mWebView.loadUrl(url);
+                MainActivity.mWebView.loadUrl(url);
 
                 Log.d("LM", url);
                 Log.d("LM", MainActivity.this.inputName);
             }
 
-        }
-        else {
+        } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
     }
