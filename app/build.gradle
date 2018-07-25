@@ -18,15 +18,15 @@ android {
     signingConfigs {
         release {
             storeFile file('../wms.jks')
-            storePassword "444444"
+            storePassword "wms999"
             keyAlias "wms"
-            keyPassword "444444"
+            keyPassword "wms999"
         }
         debug {
             storeFile file('../wms.jks')
-            storePassword "444444"
+            storePassword "wms999"
             keyAlias "wms"
-            keyPassword "444444"
+            keyPassword "wms999"
         }
     }
 
