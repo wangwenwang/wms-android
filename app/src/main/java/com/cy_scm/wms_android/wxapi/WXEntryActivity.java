@@ -8,6 +8,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.cy_scm.wms_android.MainActivity;
+import com.cy_scm.wms_android.Tools;
 import com.tencent.mm.opensdk.modelbase.BaseReq;
 import com.tencent.mm.opensdk.modelbase.BaseResp;
 import com.tencent.mm.opensdk.modelmsg.SendAuth;
@@ -116,7 +117,7 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
 
                 Log.i("PostGetUtil","get请求成功");
                 InputStream in=conn.getInputStream();
-                String resultStr = inputStream2String(in);
+                String resultStr = Tools.inputStream2String(in);
                 resultStr = URLDecoder.decode(resultStr,"UTF-8");
                 Log.i("LM",resultStr);
 
@@ -157,13 +158,12 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
      * @return
      */
     public String RFWeixinLogin(String openid){
-        openid = "fsdfa";
 
         String WarehouseCode = "";
         String UserID = "";
         String params = "{\"OpenId\":\"" + openid + "\"}";
         String paramsEncoding = URLEncoder.encode(params);
-        String Strurl = "http://119.23.153.97:8888/wms/RFWeixinLogin.do?WarehouseCode=" + WarehouseCode + "&UserID=" + UserID + "&params=" + paramsEncoding;
+        String Strurl = "https://scm.cy-scm.com/wms/RFWeixinLogin.do?WarehouseCode=" + WarehouseCode + "&UserID=" + UserID + "&params=" + paramsEncoding;
 
         HttpURLConnection conn=null;
         try {
@@ -178,7 +178,7 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
 
                 Log.d("LM","RFWeixinLogin请求成功");
                 InputStream in=conn.getInputStream();
-                String resultStr = inputStream2String(in);
+                String resultStr = Tools.inputStream2String(in);
                 resultStr = URLDecoder.decode(resultStr,"UTF-8");
 
                 try {
@@ -238,18 +238,5 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
             finish();
         }
         return null;
-    }
-
-
-    public String inputStream2String (InputStream in) throws IOException {
-
-        StringBuffer out = new StringBuffer();
-        byte[]  b = new byte[4096];
-        int n;
-        while ((n = in.read(b))!= -1){
-            out.append(new String(b,0,n));
-        }
-        Log.i("String的长度",new Integer(out.length()).toString());
-        return  out.toString();
     }
 }

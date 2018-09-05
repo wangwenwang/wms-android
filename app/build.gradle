@@ -9,7 +9,7 @@ android {
         targetSdkVersion 26
 
         versionCode 1
-        versionName "1.0"
+        versionName "1.0.0"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
@@ -55,6 +55,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    compileOptions {
+        targetCompatibility 1.8
+        sourceCompatibility 1.8
+    }
 }
 
 dependencies {
@@ -68,15 +72,15 @@ dependencies {
 //    compile 'com.journeyapps:zxing-android-embedded:3.4.0'
 //    compile 'com.android.support:appcompat-v7:23.1.0'   // Version 23+ is required
     // 扫码
-    compile "com.google.zxing:core:3.2.1"
-    compile "com.journeyapps:zxing-android-embedded:3.2.0@aar"
+    implementation "com.google.zxing:core:3.2.1"
+    implementation "com.journeyapps:zxing-android-embedded:3.2.0@aar"
 
     //微信登录
-    compile 'com.tencent.mm.opensdk:wechat-sdk-android-without-mta:+'
+    implementation 'com.tencent.mm.opensdk:wechat-sdk-android-without-mta:+'
 
     // net.sf.json.JSONObject
 //    compile files('libs/json-lib-2.4-jdk15.jar')
-    compile files('libs/json-simple-1.1.1.jar')
+    implementation files('libs/json-simple-1.1.1.jar')
 }
 
 //repositories {
