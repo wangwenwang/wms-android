@@ -40,6 +40,8 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        Log.d("LM", "WXEntryActivity onCreate: ");
+
         //如果没回调onResp，八成是这句没有写
         MainActivity.mWxApi.handleIntent(getIntent(), this);
     }
@@ -125,6 +127,8 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
                     JSONObject jsonObj = (JSONObject)(new JSONParser().parse(resultStr));
                     String openid = (String)jsonObj.get("openid");
                     wxOpenId = openid;
+                    Log.i("LM","openid：" + openid);
+
 
                     new Thread(){
                         public void run() {

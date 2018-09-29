@@ -8,8 +8,8 @@ android {
         minSdkVersion 21
         targetSdkVersion 26
 
-        versionCode 1
-        versionName "1.0.0"
+        versionCode 4
+        versionName "1.0.3"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
@@ -81,6 +81,9 @@ dependencies {
     // net.sf.json.JSONObject
 //    compile files('libs/json-lib-2.4-jdk15.jar')
     implementation files('libs/json-simple-1.1.1.jar')
+
+
+//    implementation 'com.afollestad.material-dialogs:core:0.8.6.2'
 }
 
 //repositories {

@@ -2,8 +2,10 @@ package com.cy_scm.wms_android;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.ClipData;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -13,14 +15,20 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.View;
 import android.view.Window;
 import android.webkit.JavascriptInterface;
+import android.webkit.ValueCallback;
+import android.webkit.WebChromeClient;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.Toast;
 
@@ -33,8 +41,6 @@ import com.tencent.mm.opensdk.openapi.WXAPIFactory;
 import org.json.simple.JSONObject;
 
 import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 import static android.widget.Toast.LENGTH_LONG;
 
@@ -56,6 +62,19 @@ public class MainActivity extends Activity {
     String server_App_Version;
 
     String server_App_Url;
+
+
+    //5.0以下使用
+    private ValueCallback<Uri> uploadMessage;
+    // 5.0及以上使用
+    private ValueCallback<Uri[]> uploadMessageAboveL;
+    //图片
+    private final static int FILE_CHOOSER_RESULT_CODE = 128;
+    //拍照
+    private final static int FILE_CAMERA_RESULT_CODE = 129;
+    //拍照图片路径
+    private String cameraFielPath;
+
 
     @SuppressLint("JavascriptInterface")
     @Override
@@ -93,6 +112,8 @@ public class MainActivity extends Activity {
         getWindow().setFeatureInt(Window.FEATURE_PROGRESS, Window.PROGRESS_VISIBILITY_ON);
 
         mWebView = findViewById((R.id.webview));
+        mWebView.getSettings().setTextZoom(100);
+
         // 启用javascript
         mWebView.getSettings().setJavaScriptEnabled(true);
         mWebView.setVerticalScrollbarOverlay(true);
@@ -100,6 +121,77 @@ public class MainActivity extends Activity {
 
         // 在js中调用本地java方法
         mWebView.addJavascriptInterface(new JsInterface(this), "CallAndroidOrIOS");
+
+
+
+
+        WebSettings settings = mWebView.getSettings();
+        settings.setJavaScriptEnabled(true);    //设置webview支持javascript
+//        settings.setJavaScriptCanOpenWindowsAutomatically(true);
+        settings.setLoadsImagesAutomatically(true);    //支持自动加载图片
+        settings.setUseWideViewPort(true);    //设置webview推荐使用的窗口，使html界面自适应屏幕
+        settings.setLoadWithOverviewMode(true);
+        settings.setSaveFormData(true);    //设置webview保存表单数据
+        settings.setSavePassword(true);    //设置webview保存密码
+
+//        int mDensity = DensityUtils.getDensityDpi(context);
+        int mDensity = 240;
+        if (mDensity == 120) {
+            settings.setDefaultZoom(WebSettings.ZoomDensity.CLOSE);
+        } else if (mDensity == 160) {
+            settings.setDefaultZoom(WebSettings.ZoomDensity.MEDIUM);
+        } else if (mDensity == 240) {
+            settings.setDefaultZoom(WebSettings.ZoomDensity.FAR);
+        }
+        settings.setDefaultZoom(WebSettings.ZoomDensity.MEDIUM);    //设置中等像素密度，medium=160dpi
+        settings.setSupportZoom(true);    //支持缩放
+        settings.setSupportMultipleWindows(true);
+        settings.setAppCacheEnabled(true); //设置APP可以缓存
+        settings.setDatabaseEnabled(true);
+        settings.setDomStorageEnabled(true);//返回上个界面不刷新  允许本地缓存
+        //        settings.setCacheMode(WebSettings.LOAD_DEFAULT);// 设置缓存LOAD_DEFAULT   LOAD_CACHE_ONLY,LOAD_NO_CACHE
+        settings.setAllowFileAccess(true);// 设置可以访问文件
+        settings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.SINGLE_COLUMN);//不支持放大缩小
+        settings.setDisplayZoomControls(false);//不支持放大缩小
+        //      NORMAL：正常显示，没有渲染变化。
+        //      SINGLE_COLUMN：把所有内容放到WebView组件等宽的一列中。   //这个是强制的，把网页都挤变形了
+        //      NARROW_COLUMNS：可能的话，使所有列的宽度不超过屏幕宽度。 //好像是默认的
+
+        mWebView.setLongClickable(true);
+        mWebView.setScrollbarFadingEnabled(true);
+        mWebView.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
+        mWebView.setDrawingCacheEnabled(true);
+//覆盖WebView默认使用第三方或系统默认浏览器打开网页的行为，使网页用WebView打开
+        mWebView.setWebChromeClient(new WebChromeClient() {
+            // For Android < 3.0
+            public void openFileChooser(ValueCallback<Uri> valueCallback) {
+                uploadMessage = valueCallback;
+                openImageChooserActivity();
+            }
+
+            // For Android  >= 3.0
+            public void openFileChooser(ValueCallback valueCallback, String acceptType) {
+                uploadMessage = valueCallback;
+                openImageChooserActivity();
+            }
+
+            //For Android  >= 4.1
+            public void openFileChooser(ValueCallback<Uri> valueCallback, String acceptType, String capture) {
+                uploadMessage = valueCallback;
+                openImageChooserActivity();
+            }
+
+            // For Android >= 5.0
+            @Override
+            public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, WebChromeClient.FileChooserParams fileChooserParams) {
+                uploadMessageAboveL = filePathCallback;
+                openImageChooserActivity();
+                return true;
+            }
+        });
+
+
+
 
 
         // 注册微信登录
@@ -228,7 +320,9 @@ public class MainActivity extends Activity {
                 SharedPreferences readLatLng = mContext.getSharedPreferences("w_UserInfo", MODE_MULTI_PROCESS);
                 String u = readLatLng.getString("UserName", "");
                 String p = readLatLng.getString("Password", "");
+                String t = readLatLng.getString("Tenant_Code", "");
                 String startTime = readLatLng.getString("Set_User_Pass_Time", Tools.getCurrDate());
+                String s = readLatLng.getString("Server_Address_Default", Tools.getCurrDate());
                 String endTime = Tools.getCurrDate();
                 long expTime = Tools.getTimeExpend(startTime, endTime);
 
@@ -241,7 +335,18 @@ public class MainActivity extends Activity {
                         @Override
                         public void run() {
 
-                            String url = "javascript:SetUserNameAndPassword('" + u + "','" + p + "')";
+                            String url = "javascript:SetUserNameAndPassword('" + u + "','" + p + "','" + t + "')";
+                            MainActivity.mWebView.loadUrl(url);
+                            Log.d("LM", url);
+                        }
+                    });
+                }else {
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+
+                            String url = "javascript:SetUserNameAndPassword('" + "" + "','" + "" + "','" + t + "')";
                             MainActivity.mWebView.loadUrl(url);
                             Log.d("LM", url);
                         }
@@ -257,11 +362,28 @@ public class MainActivity extends Activity {
                         Log.d("LM", url);
                     }
                 });
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        String url = "javascript:SetServerAddressDefault('" + s + "')";
+                        MainActivity.mWebView.loadUrl(url);
+                        Log.d("LM", url);
+                    }
+                });
+            } else if (exceName.equals("记住服务器地址")) {
+
+                if (exceName != null) {
+
+                    SharedPreferences crearPre = mContext.getSharedPreferences("w_UserInfo", MODE_PRIVATE);
+                    crearPre.edit().putString("Server_Address_Default", inputName).commit();
+                }
             }
         }
 
         @JavascriptInterface
-        public void callAndroid(String exceName, String u, String p) {
+        public void callAndroid(String exceName, String u, String p, String t) {
 
             Log.d("LM", "执行:" + exceName + "    " + "用户名:" + u + "    " + "密码:" + p);
 
@@ -275,6 +397,7 @@ public class MainActivity extends Activity {
                     SharedPreferences crearPre = mContext.getSharedPreferences("w_UserInfo", MODE_PRIVATE);
                     crearPre.edit().putString("UserName", u).commit();
                     crearPre.edit().putString("Password", p).commit();
+                    crearPre.edit().putString("Tenant_Code", t).commit();
                     crearPre.edit().putString("Set_User_Pass_Time", curDate).commit();
                 }
             }
@@ -305,6 +428,47 @@ public class MainActivity extends Activity {
         } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
+
+
+//        super.onActivityResult(requestCode, resultCode, data);
+//        if (null == uploadMessage && null == uploadMessageAboveL) return;
+//        if (resultCode != RESULT_OK) {//同上所说需要回调onReceiveValue方法防止下次无法响应js方法
+//            if (uploadMessageAboveL != null) {
+//                uploadMessageAboveL.onReceiveValue(null);
+//                uploadMessageAboveL = null;
+//            }
+//            if (uploadMessage != null) {
+//                uploadMessage.onReceiveValue(null);
+//                uploadMessage = null;
+//            }
+//            return;
+//        }
+//        Uri result = null;
+//        if (requestCode == FILE_CAMERA_RESULT_CODE) {
+//            if (null != data && null != data.getData()) {
+//                result = data.getData();
+//            }
+//            if (result == null && hasFile(cameraFielPath)) {
+//                result = Uri.fromFile(new File(cameraFielPath));
+//            }
+//            if (uploadMessageAboveL != null) {
+//                uploadMessageAboveL.onReceiveValue(new Uri[]{result});
+//                uploadMessageAboveL = null;
+//            } else if (uploadMessage != null) {
+//                uploadMessage.onReceiveValue(result);
+//                uploadMessage = null;
+//            }
+//        } else if (requestCode == FILE_CHOOSER_RESULT_CODE) {
+//            if (data != null) {
+//                result = data.getData();
+//            }
+//            if (uploadMessageAboveL != null) {
+//                onActivityResultAboveL(data);
+//            } else if (uploadMessage != null) {
+//                uploadMessage.onReceiveValue(result);
+//                uploadMessage = null;
+//            }
+//        }
     }
 
 
@@ -387,5 +551,120 @@ public class MainActivity extends Activity {
 
             showUpdataDialog();
         }
+    }
+
+
+    private void openImageChooserActivity() {
+//        new MaterialDialog.Builder(this)
+//                .items(R.array.photo)
+//                .positiveText("取消")
+//                .onPositive(new MaterialDialog.SingleButtonCallback() {
+//                    @Override
+//                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+//                        if (uploadMessageAboveL != null) {
+//                            uploadMessageAboveL.onReceiveValue(null);
+//                            uploadMessageAboveL = null;
+//                        }
+//                        if (uploadMessage != null) {
+//                            uploadMessage.onReceiveValue(null);
+//                            uploadMessage = null;
+//                        }
+//                        dialog.dismiss();
+//                    }
+//                })
+//                .cancelable(false)
+//                .canceledOnTouchOutside(false)
+//                .itemsCallback(new MaterialDialog.ListCallback() {
+//                    @Override
+//                    public void onSelection(MaterialDialog dialog, View itemView, int position, CharSequence text) {
+//                        if (position == 0) {
+//                            takeCamera();
+//                        } else if (position == 1) {
+//                            takePhoto();
+//                        }
+//                    }
+//                }).show();
+    }
+
+    //选择图片
+    private void takePhoto() {
+        Intent i = new Intent(Intent.ACTION_GET_CONTENT);
+        i.addCategory(Intent.CATEGORY_OPENABLE);
+        i.setType("image/*");
+        startActivityForResult(Intent.createChooser(i, "Image Chooser"), FILE_CHOOSER_RESULT_CODE);
+    }
+
+    //拍照
+    private void takeCamera() {
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+//        if (CommonUtil.hasSdcard()) {
+            //这里可能需要检查文件夹是否存在
+            //File file = new File(Environment.getExternalStorageDirectory() + "/APPNAME/");
+            //if (!file.exists()) {
+            //  file.mkdirs();
+            //}
+            cameraFielPath = Environment.getExternalStorageDirectory() + "upload.jpg";
+            File outputImage = new File(cameraFielPath);
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(outputImage));
+            startActivityForResult(intent, FILE_CAMERA_RESULT_CODE);
+//        }
+    }
+
+    /**
+     * 判断文件是否存在
+     */
+    public static boolean hasFile(String path) {
+        try {
+            File f = new File(path);
+            if (!f.exists()) {
+                return false;
+            }
+        } catch (Exception e) {
+            // TODO: handle exception
+            return false;
+        }
+        return true;
+    }
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private void onActivityResultAboveL(Intent intent) {
+        Uri[] results = null;
+        if (intent != null) {
+            String dataString = intent.getDataString();
+            ClipData clipData = intent.getClipData();
+            if (clipData != null) {
+                results = new Uri[clipData.getItemCount()];
+                for (int i = 0; i < clipData.getItemCount(); i++) {
+                    ClipData.Item item = clipData.getItemAt(i);
+                    results[i] = item.getUri();
+                }
+            }
+            if (dataString != null)
+                results = new Uri[]{Uri.parse(dataString)};
+        }
+        uploadMessageAboveL.onReceiveValue(results);
+        uploadMessageAboveL = null;
+    }
+
+    /**
+     * 返回上一页
+     */
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+
+            mWebView.goBack();
+        }
+        return false;
+    }
+
+    /**
+     * 返回桌面
+     */
+    private void goHomeActivity(){
+        Intent home = new Intent(Intent.ACTION_MAIN);
+        home.addCategory(Intent.CATEGORY_HOME);
+        startActivity(home);
     }
 }
