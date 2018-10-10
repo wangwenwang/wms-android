@@ -117,7 +117,7 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
             conn.setRequestMethod("GET");
             if(HttpURLConnection.HTTP_OK==conn.getResponseCode()){
 
-                Log.i("PostGetUtil","get请求成功");
+                Log.i("LM","获取微信openid成功");
                 InputStream in=conn.getInputStream();
                 String resultStr = Tools.inputStream2String(in);
                 resultStr = URLDecoder.decode(resultStr,"UTF-8");
@@ -145,7 +145,7 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
                 in.close();
             }
             else {
-                Log.i("PostGetUtil","get请求失败");
+                Log.i("LM","获取微信openid失败");
             }
 
         } catch (Exception e) {
@@ -167,7 +167,7 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
         String UserID = "";
         String params = "{\"OpenId\":\"" + openid + "\"}";
         String paramsEncoding = URLEncoder.encode(params);
-        String Strurl = "https://scm.cy-scm.com/wms/RFWeixinLogin.do?WarehouseCode=" + WarehouseCode + "&UserID=" + UserID + "&params=" + paramsEncoding;
+        String Strurl = "https://kdyrf.cy-scm.com:8056/rfInf/wms/RFWeixinLogin.do?WarehouseCode=" + WarehouseCode + "&UserID=" + UserID + "&params=" + paramsEncoding;
 
         HttpURLConnection conn=null;
         try {

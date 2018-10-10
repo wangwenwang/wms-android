@@ -84,6 +84,7 @@ public class MainActivity extends Activity {
 
         Log.d("LM", "程序启动");
 
+
         mContext = this;
 
         // 软件更新定时器，目前程序启动检查更新，以免有用户从不退出程序
@@ -367,9 +368,14 @@ public class MainActivity extends Activity {
                     @Override
                     public void run() {
 
-                        String url = "javascript:SetServerAddressDefault('" + s + "')";
-                        MainActivity.mWebView.loadUrl(url);
-                        Log.d("LM", url);
+                        if(Tools.getAppInstallationUsed(mContext).equals("YES")) {
+                            String url = "javascript:SetServerAddressDefault('" + s + "')";
+                            MainActivity.mWebView.loadUrl(url);
+                            Log.d("LM", url);
+                        }else {
+
+                            Log.d("LM", "首次安装，不发送服务器地址给vue");
+                        }
                     }
                 });
             } else if (exceName.equals("记住服务器地址")) {

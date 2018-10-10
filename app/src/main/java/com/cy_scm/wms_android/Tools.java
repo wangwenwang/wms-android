@@ -3,6 +3,7 @@ package com.cy_scm.wms_android;
 import android.app.ActivityManager;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Environment;
 import android.util.Log;
@@ -26,6 +27,8 @@ import java.net.URLEncoder;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import static android.content.Context.MODE_MULTI_PROCESS;
 
 public class Tools {
 
@@ -170,7 +173,7 @@ public class Tools {
         String UserID = "";
         String params = "{\"ConfigCode\":\"" + "APPINFOR" + "\"}";
         String paramsEncoding = URLEncoder.encode(params);
-        String Strurl = "https://scm.cy-scm.com/wms/RFAppInfor.do?WarehouseCode=" + WarehouseCode + "&UserID=" + UserID + "&params=" + paramsEncoding;
+        String Strurl = "https://kdyrf.cy-scm.com:8056/rfInf/wms/RFAppInfor.do?WarehouseCode=" + WarehouseCode + "&UserID=" + UserID + "&params=" + paramsEncoding;
 
         HttpURLConnection conn=null;
         try {
@@ -207,7 +210,9 @@ public class Tools {
                 in.close();
             }
             else {
-                Log.i("PostGetUtil","get请求失败");
+                Log.d("LM","版本更新请求失败");
+                Log.d("LM",Strurl);
+
             }
 
         } catch (Exception e) {
@@ -287,5 +292,27 @@ public class Tools {
         }
         returnMillis = d.getTime();
         return returnMillis;
+    }
+
+    /**
+     * 获取是否安装使用
+     * @param mContext 上下文
+     * @return
+     */
+    public static String getAppInstallationUsed(Context mContext) {
+
+        SharedPreferences pre_appinfo = mContext.getSharedPreferences("w_AppInfo", MODE_MULTI_PROCESS);
+        return pre_appinfo.getString("InstallationUsed", "");
+    }
+
+    /**
+     * 设置已安装使用
+     * @param mContext 上下文
+     * @throws Exception
+     */
+    public static void setAppInstallationUsed(Context mContext) {
+
+        SharedPreferences pre_appinfo = mContext.getSharedPreferences("w_AppInfo", MODE_MULTI_PROCESS);
+        pre_appinfo.edit().putString("InstallationUsed", "YES").commit();
     }
 }
