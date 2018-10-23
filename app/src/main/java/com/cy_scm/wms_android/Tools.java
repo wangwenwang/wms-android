@@ -167,13 +167,28 @@ public class Tools {
      * 获取最新版本信息
      * @return
      */
-    public static JSONObject getServerVersion() {
+    public static JSONObject getServerVersion(Context mContext) {
 
         String WarehouseCode = "";
         String UserID = "";
         String params = "{\"ConfigCode\":\"" + "APPINFOR" + "\"}";
         String paramsEncoding = URLEncoder.encode(params);
-        String Strurl = "https://kdyrf.cy-scm.com:8056/rfInf/wms/RFAppInfor.do?WarehouseCode=" + WarehouseCode + "&UserID=" + UserID + "&params=" + paramsEncoding;
+        while (true) {
+
+            if(!getCurrServerAddress(mContext).equals("")) {
+
+                break;
+            }
+            Log.d("LM", "获取最新版本信息，没有服务器地址，延迟1秒执行");
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        String Strurl = getCurrServerAddress(mContext) + "RFAppInfor.do?WarehouseCode=" + WarehouseCode + "&UserID=" + UserID + "&params=" + paramsEncoding;
+
+        Log.d("LM", "获取版本号URL请求:" + Strurl);
 
         HttpURLConnection conn=null;
         try {
@@ -314,5 +329,37 @@ public class Tools {
 
         SharedPreferences pre_appinfo = mContext.getSharedPreferences("w_AppInfo", MODE_MULTI_PROCESS);
         pre_appinfo.edit().putString("InstallationUsed", "YES").commit();
+    }
+
+    /**
+     * 获取默认服务器地址
+     * @return
+     */
+    public static String getDefaultServerAddress() {
+
+        return "https://kdyrf.cy-scm.com:8056/rfInf/wms/";
+    }
+
+    /**
+     * 获取当前使用的服务器地址
+     * @param mContext 上下文
+     * @return
+     */
+    public static String getCurrServerAddress(Context mContext) {
+
+        SharedPreferences pre_appinfo = mContext.getSharedPreferences("w_AppInfo", MODE_MULTI_PROCESS);
+        String currSA = pre_appinfo.getString("CurrServerAddress", "");
+        return currSA;
+    }
+
+    /**
+     * 设置当前使用的服务器地址
+     * @param mContext 上下文
+     * @return
+     */
+    public static void setCurrServerAddress(Context mContext, String address) {
+
+        SharedPreferences pre_appinfo = mContext.getSharedPreferences("w_AppInfo", MODE_MULTI_PROCESS);
+        pre_appinfo.edit().putString("CurrServerAddress", address).commit();
     }
 }

@@ -48,7 +48,7 @@ import static android.widget.Toast.LENGTH_LONG;
 public class MainActivity extends Activity {
     public static WebView mWebView;
 
-    static Context mContext;
+    public static Context mContext;
 
     String inputName;
 
@@ -206,7 +206,7 @@ public class MainActivity extends Activity {
 
                 try {
 
-                    JSONObject dict = Tools.getServerVersion();
+                    JSONObject dict = Tools.getServerVersion(mContext);
                     server_App_Version = (String) dict.get("VERSION");
                     server_App_Url = (String) dict.get("UPDATEURL");
                     String loc_App_Version = Tools.getVerName(mContext);
@@ -318,14 +318,15 @@ public class MainActivity extends Activity {
 
                 Log.d("LM", "登录页面已加载");
 
+
                 SharedPreferences readLatLng = mContext.getSharedPreferences("w_UserInfo", MODE_MULTI_PROCESS);
                 String u = readLatLng.getString("UserName", "");
                 String p = readLatLng.getString("Password", "");
                 String t = readLatLng.getString("Tenant_Code", "");
                 String startTime = readLatLng.getString("Set_User_Pass_Time", Tools.getCurrDate());
-                String s = readLatLng.getString("Server_Address_Default", Tools.getCurrDate());
                 String endTime = Tools.getCurrDate();
                 long expTime = Tools.getTimeExpend(startTime, endTime);
+
 
                 Log.d("LM", "expTime: " + expTime);
 
@@ -368,13 +369,15 @@ public class MainActivity extends Activity {
                     @Override
                     public void run() {
 
-                        if(Tools.getAppInstallationUsed(mContext).equals("YES")) {
-                            String url = "javascript:SetServerAddressDefault('" + s + "')";
-                            MainActivity.mWebView.loadUrl(url);
-                            Log.d("LM", url);
+                        String currSA = Tools.getCurrServerAddress(mContext);
+                        if(currSA.equals("")) {
+
+                            Log.d("LM", "首次安装，本地没有服务器，不发送服务器地址给vue");
                         }else {
 
-                            Log.d("LM", "首次安装，不发送服务器地址给vue");
+                            String url = "javascript:SetServerAddressByPhoneCookie('" + currSA + "')";
+                            MainActivity.mWebView.loadUrl(url);
+                            Log.d("LM", url);
                         }
                     }
                 });
@@ -382,8 +385,7 @@ public class MainActivity extends Activity {
 
                 if (exceName != null) {
 
-                    SharedPreferences crearPre = mContext.getSharedPreferences("w_UserInfo", MODE_PRIVATE);
-                    crearPre.edit().putString("Server_Address_Default", inputName).commit();
+                    Tools.setCurrServerAddress(mContext, inputName);
                 }
             }
         }

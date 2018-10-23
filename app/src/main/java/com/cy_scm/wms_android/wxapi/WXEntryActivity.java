@@ -167,7 +167,9 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
         String UserID = "";
         String params = "{\"OpenId\":\"" + openid + "\"}";
         String paramsEncoding = URLEncoder.encode(params);
-        String Strurl = "https://kdyrf.cy-scm.com:8056/rfInf/wms/RFWeixinLogin.do?WarehouseCode=" + WarehouseCode + "&UserID=" + UserID + "&params=" + paramsEncoding;
+        String Strurl = Tools.getCurrServerAddress(MainActivity.mContext) + "RFWeixinLogin.do?WarehouseCode=" + WarehouseCode + "&UserID=" + UserID + "&params=" + paramsEncoding;
+
+        Log.d("LM", "微信登录URL请求:" + Strurl);
 
         HttpURLConnection conn=null;
         try {
@@ -192,7 +194,6 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
                     String Msg = (String)jsonObj.get("Msg");
                     if(status.equals("1")) {
 
-                        Log.d("LM", "fd:" + jsonObj.get("data") + jsonObj.get("data").getClass());
                         if(jsonObj.get("data").getClass().getName().equals(org.json.simple.JSONArray.class.getName())) {
 
                             org.json.simple.JSONArray array = (org.json.simple.JSONArray) jsonObj.get("data");
@@ -203,8 +204,10 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
+
                                     String LMurl = "javascript:WXBind_YES_Ajax('" + WXBind_YES_Ajax_PARAMS + "')";
                                     MainActivity.mWebView.loadUrl(LMurl);
+                                    Log.d("LM", LMurl);
                                 }
                             });
 
