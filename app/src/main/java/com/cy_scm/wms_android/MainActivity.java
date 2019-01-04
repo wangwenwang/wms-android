@@ -662,7 +662,15 @@ public class MainActivity extends Activity {
 
         if (keyCode == KeyEvent.KEYCODE_BACK) {
 
+            // 登录页时不允许返回上一页
+            String uu = mWebView.getUrl();
+            String tt = mWebView.getOriginalUrl();
+            if(uu.equals("file:///android_asset/www/index.html#/")) {
+
+                return false;
+            }
             mWebView.goBack();
+            Log.d("LM", "onKeyDown: ");
         }
         return false;
     }
